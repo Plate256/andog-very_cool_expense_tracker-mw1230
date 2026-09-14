@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    :root {
+      --bg-color: #A3BCF9;
+      --button-color: #7796CB;
+      --button-hover: #576490;
+      --nav-color: #576490;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+    }
+
+    main {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    form {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      text-align: center;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--button-color);
+      border-radius: 10px;
+      background: white;
+      color: var(--button-color);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .toggle-btn.active {
+      background: var(--button-color);
+      color: white;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 14px 12px;
+      font-size: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      background-color: var(--button-color);
+      color: white;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: var(--button-hover);
+    }
+
+    .records-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      background-color: var(--button-color);
+      color: white;
+      text-decoration: none;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+
+    .records-btn:hover {
+      background-color: var(--button-hover);
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: var(--nav-color);
+      color: white;
+      text-decoration: none;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <form id="expenseForm" action="/action_page.php" method="post">
+      <input type="hidden" id="transactionType" name="transactionType" value="income">
+      <input type="hidden" id="amountValue" name="amount" value="0">
+
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn active" data-type="income">Income</button>
+        <button type="button" class="toggle-btn" data-type="expense">Expense</button>
+      </div>
+
+      <label for="entryDate">Date</label>
+      <input type="date" id="entryDate" name="entryDate" required>
+
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" name="amountInput" min="0" step="0.01" placeholder="input amount here" required>
+      <input type="submit" value="Submit">
+      <a href="records.html" class="records-btn">Records</a>
+    </form>
+    <a href="Main.html" class="back-btn" aria-label="Back to main page">←</a>
+  </main>
+
+  <script>
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    const transactionType = document.getElementById('transactionType');
+    const amountInput = document.getElementById('amount');
+    const amountValue = document.getElementById('amountValue');
+    const form = document.getElementById('expenseForm');
+
+    toggleButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        toggleButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+        transactionType.value = button.dataset.type;
+      });
+    });
+
+    form.addEventListener('submit', (event) => {
+      const amount = parseFloat(amountInput.value);
+
+      if (isNaN(amount) || amount <= 0) {
+        event.preventDefault();
+        alert('Please enter a valid amount greater than 0.');
+        return;
+      }
+
+      amountValue.value = transactionType.value === 'expense' ? -amount : amount;
+    });
+  </script>
+</body>
+</html>

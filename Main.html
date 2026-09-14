@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    :root {
+      --bg-color: #A3BCF9;
+      --button-color: #7796CB;
+      --button-hover: #576490;
+      --nav-color: #576490;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+    }
+
+    .navbar {
+      background-color: var(--nav-color);
+      color: white;
+      padding: 20px 30px;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    main {
+      min-height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 20px;
+      padding-top: 40px;
+    }
+
+    button {
+      width: 220px;
+      padding: 18px 24px;
+      font-size: 22px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      background-color: var(--button-color);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">Very Cool Expense Tracker</nav>
+  <main>
+    <a href="records.html"><button>View Expenses</button></a>
+    <a href="edit_expenses.html"><button>Edit Expenses</button></a>
+  </main>
+</body>
+</html>
