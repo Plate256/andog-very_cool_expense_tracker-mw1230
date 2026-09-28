@@ -116,6 +116,12 @@
       background-color: var(--button-hover);
     }
 
+    .form-title {
+      font-size: 30px;
+      margin-bottom: 20px;
+      color: #1f2b45;
+    }
+
     .back-btn {
       position: fixed;
       top: 20px;
@@ -137,9 +143,9 @@
 </head>
 <body>
   <main>
-    <form id="expenseForm" action="/action_page.php" method="post">
+    <form id="expenseForm">
+      <h1 class="form-title" id="formTitle">Add Expense</h1>
       <input type="hidden" id="transactionType" name="transactionType" value="income">
-      <input type="hidden" id="amountValue" name="amount" value="0">
 
       <div class="toggle-group">
         <button type="button" class="toggle-btn active" data-type="income">Income</button>
@@ -161,8 +167,40 @@
     const toggleButtons = document.querySelectorAll('.toggle-btn');
     const transactionType = document.getElementById('transactionType');
     const amountInput = document.getElementById('amount');
-    const amountValue = document.getElementById('amountValue');
     const form = document.getElementById('expenseForm');
+    const formTitle = document.getElementById('formTitle');
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('id');
+
+    async function loadRecordForEdit() {
+      if (!editId) return;
+
+      try {
+        const response = await fetch(`/api/expenses/${editId}`);
+        const record = await response.json();
+
+        if (!response.ok) {
+          throw new Error(record.message || 'Failed to load expense');
+        }
+
+        formTitle.textContent = 'Edit Expense';
+
+        const isExpense = Number(record.amount) < 0;
+        const amountValue = Math.abs(Number(record.amount || 0));
+        const dateValue = record.date ? (record.date.includes('T') ? record.date.split('T')[0] : record.date) : '';
+
+        transactionType.value = isExpense ? 'expense' : 'income';
+        amountInput.value = amountValue;
+        document.getElementById('entryDate').value = dateValue;
+
+        toggleButtons.forEach((button) => {
+          const isActive = button.dataset.type === transactionType.value;
+          button.classList.toggle('active', isActive);
+        });
+      } catch (error) {
+        alert(error.message);
+      }
+    }
 
     toggleButtons.forEach((button) => {
       button.addEventListener('click', () => {
@@ -171,17 +209,50 @@
       });
     });
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
       const amount = parseFloat(amountInput.value);
 
       if (isNaN(amount) || amount <= 0) {
-        event.preventDefault();
         alert('Please enter a valid amount greater than 0.');
         return;
       }
 
-      amountValue.value = transactionType.value === 'expense' ? -amount : amount;
+      const payload = {
+        title: transactionType.value === 'expense' ? 'Expense' : 'Income',
+        category: transactionType.value === 'expense' ? 'Expense' : 'Income',
+        amount: transactionType.value === 'expense' ? -amount : amount,
+        date: document.getElementById('entryDate').value,
+        description: transactionType.value === 'expense' ? 'Expense entered manually' : 'Income entered manually'
+      };
+
+      try {
+        const endpoint = editId ? `/api/expenses/${editId}` : '/api/expenses';
+        const method = editId ? 'PUT' : 'POST';
+
+        const response = await fetch(endpoint, {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to save expense');
+        }
+
+        alert(editId ? 'Expense updated successfully!' : 'Expense saved successfully!');
+        window.location.href = 'records.html';
+      } catch (error) {
+        alert(error.message);
+      }
     });
+
+    loadRecordForEdit();
   </script>
 </body>
 </html>

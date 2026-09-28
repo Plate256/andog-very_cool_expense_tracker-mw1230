@@ -22,6 +22,34 @@
       align-items: center;
     }
 
+    .records-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1f2b45;
+      margin: 0;
+    }
+
+    .add-btn {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background-color: var(--button-color);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
     .records-table {
       width: 100%;
       border-collapse: collapse;
@@ -42,6 +70,21 @@
       background-color: var(--button-color);
       color: white;
       font-weight: bold;
+    }
+
+    .action-btn {
+      background-color: var(--nav-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 0 4px;
+    }
+
+    .delete-btn {
+      background-color: #c94b4b;
     }
 
     .back-btn {
@@ -67,6 +110,11 @@
   <main>
     <a href="Main.html" class="back-btn" aria-label="Back to main page">←</a>
     <div style="width: 700px; max-width: 90%;">
+      <div class="records-header">
+        <h1 class="page-title">Expense Records</h1>
+        <a class="add-btn" href="edit_expenses.html">Add Expense</a>
+      </div>
+
       <table class="records-table">
         <thead>
           <tr>
@@ -74,15 +122,103 @@
             <th>Income</th>
             <th>Expense</th>
             <th>Total</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td colspan="4">No records yet</td>
+            <td colspan="5">No records yet</td>
           </tr>
         </tbody>
       </table>
     </div>
   </main>
+  <script>
+    const tbody = document.querySelector('.records-table tbody');
+
+    function formatCurrency(value) {
+      return Number(value || 0).toFixed(2);
+    }
+
+    async function loadRecords() {
+      try {
+        const response = await fetch('/api/expenses');
+        const records = await response.json();
+
+        if (!Array.isArray(records) || records.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">No records yet</td></tr>';
+          return;
+        }
+
+        let runningTotal = 0;
+        tbody.innerHTML = records.map((record) => {
+          const amount = Number(record.amount || 0);
+          const income = amount >= 0 ? amount : 0;
+          const expense = amount < 0 ? Math.abs(amount) : 0;
+          runningTotal += amount;
+
+          const rawDate = record.date || '';
+          const displayDate = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
+
+          return `
+            <tr>
+              <td>${displayDate || '-'}</td>
+              <td>${formatCurrency(income)}</td>
+              <td>${formatCurrency(expense)}</td>
+              <td>${formatCurrency(runningTotal)}</td>
+              <td>
+                <button class="action-btn edit-btn" type="button" data-id="${record.id}">Edit</button>
+                <button class="action-btn delete-btn" type="button" data-id="${record.id}">Remove</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        document.querySelectorAll('.edit-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            const id = button.dataset.id;
+            window.location.href = `edit_expenses.html?id=${id}`;
+          });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const id = button.dataset.id;
+            const confirmed = confirm('Are you sure you want to remove this entry?');
+            if (!confirmed) return;
+
+            try {
+              const response = await fetch(`/api/expenses/${id}`, {
+                method: 'DELETE'
+              });
+
+              const text = await response.text();
+              let result = {};
+
+              try {
+                result = text ? JSON.parse(text) : {};
+              } catch (error) {
+                throw new Error('The app is still using an older server. Please stop the old node process and run node server.js again.');
+              }
+
+              if (!response.ok) {
+                throw new Error(result.message || 'Failed to delete expense');
+              }
+
+              alert('Expense removed successfully');
+              await loadRecords();
+            } catch (error) {
+              alert(error.message);
+            }
+          });
+        });
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="5">Unable to load records</td></tr>';
+        console.error(error);
+      }
+    }
+
+    loadRecords();
+  </script>
 </body>
 </html>
